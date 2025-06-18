@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming Top-Up Analytics Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #4e54c8, #8f94fb);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 35px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .metric-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        }
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2f3542;
+            margin-bottom: 8px;
+        }
+        .metric-label {
+            color: #57606f;
+            font-size: 1em;
+        }
+        .section {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #2f3542;
+            border-left: 5px solid #4e54c8;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        th {
+            background-color: #f1f3f5;
+            font-weight: 600;
+            color: #2f3542;
+        }
+        tr:hover {
+            background-color: #f9fafc;
+        }
+        .revenue {
+            color: #20c997;
+            font-weight: bold;
+        }
+        .success {
+            color: #28a745;
+        }
+        .pending {
+            color: #ffc107;
+        }
+        .failed {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Gaming Top-Up Analytics Dashboard</h1>
+            <p>Real-time insights and performance metrics</p>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">${{ total_revenue }}</div>
+                <div class="metric-label">Total Revenue</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ total_orders }}</div>
+                <div class="metric-label">Total Orders</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ success_rate }}%</div>
+                <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value failed">{{ failed_payments_count }}</div>
+                <div class="metric-label">Failed Payments (This Month)</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Top 5 Most Purchased Products</h2>
+            {% if top_products %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Product Name</th>
+                            <th>Game</th>
+                            <th>Total Orders</th>
+                            <th>Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in top_products %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.game.name }}</td>
+                            <td>{{ product.total_orders }}</td>
+                            <td class="revenue">${{ product.total_revenue|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No successful orders found.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>💰 Daily Revenue (Last 7 Days)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in daily_revenue %}
+                    <tr>
+                        <td>{{ day.date|date:"M d, Y" }}</td>
+                        <td class="revenue">${{ day.revenue|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📈 Order Status Breakdown</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="success">✅ Successful</td>
+                        <td>{{ successful_orders }}</td>
+                        <td>{{ success_rate }}%</td>
+                    </tr>
+                    <tr>
+                        <td class="pending">⏳ Pending</td>
+                        <td>{{ pending_orders }}</td>
+                        <td>{% widthratio pending_orders total_orders 100 %}%</td>
+                    </tr>
+                    <tr>
+                        <td class="failed">❌ Failed</td>
+                        <td>{{ failed_payments_count }}</td>
+                        <td>{% widthratio failed_payments_count total_orders 100 %}%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
